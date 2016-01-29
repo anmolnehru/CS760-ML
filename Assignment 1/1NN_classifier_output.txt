@@ -1,0 +1,48 @@
+=== Run information ===
+
+Scheme:weka.classifiers.lazy.IB1 
+Relation:     cpu
+Instances:    20
+Attributes:   10
+              vendor
+              MYCT
+              MMIN
+              MMAX
+              CACH
+              CHMIN
+              CHMAX
+              GRAPHICS
+              MEMORY
+              games_class
+Test mode:10-fold cross-validation
+
+=== Classifier model (full training set) ===
+
+IB1 classifier
+
+Time taken to build model: 0 seconds
+
+=== Stratified cross-validation ===
+=== Summary ===
+
+Correctly Classified Instances          12               60      %
+Incorrectly Classified Instances         8               40      %
+Kappa statistic                          0.2   
+Mean absolute error                      0.4   
+Root mean squared error                  0.6325
+Relative absolute error                 80      %
+Root relative squared error            126.4911 %
+Total Number of Instances               20     
+
+=== Detailed Accuracy By Class ===
+
+               TP Rate   FP Rate   Precision   Recall  F-Measure   ROC Area  Class
+                 0.5       0.3        0.625     0.5       0.556      0.6      0
+                 0.7       0.5        0.583     0.7       0.636      0.6      1
+Weighted Avg.    0.6       0.4        0.604     0.6       0.596      0.6  
+
+=== Confusion Matrix ===
+
+ a b   <-- classified as
+ 5 5 | a = 0
+ 3 7 | b = 1

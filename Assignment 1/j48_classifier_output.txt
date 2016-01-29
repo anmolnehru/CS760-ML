@@ -1,0 +1,41 @@
+J48 pruned tree
+------------------
+
+GRAPHICS = 0: 0 (7.0)
+GRAPHICS = 1
+|   MEMORY <= 2048: 1 (5.0)
+|   MEMORY > 2048
+|   |   MEMORY <= 3072: 0 (4.0/1.0)
+|   |   MEMORY > 3072: 1 (4.0)
+
+Number of Leaves  : 	4
+
+Size of the tree : 	7
+
+
+Time taken to build model: 0.01 seconds
+
+=== Stratified cross-validation ===
+=== Summary ===
+
+Correctly Classified Instances          15               75      %
+Incorrectly Classified Instances         5               25      %
+Kappa statistic                          0.5   
+Mean absolute error                      0.275 
+Root mean squared error                  0.4759
+Relative absolute error                 55      %
+Root relative squared error             95.1836 %
+Total Number of Instances               20     
+
+=== Detailed Accuracy By Class ===
+
+               TP Rate   FP Rate   Precision   Recall  F-Measure   ROC Area  Class
+                 0.7       0.2        0.778     0.7       0.737      0.75     0
+                 0.8       0.3        0.727     0.8       0.762      0.75     1
+Weighted Avg.    0.75      0.25       0.753     0.75      0.749      0.75 
+
+=== Confusion Matrix ===
+
+ a b   <-- classified as
+ 7 3 | a = 0
+ 2 8 | b = 1
