@@ -1,0 +1,2 @@
+#call python and pass the 3 args
+python bayes.py $1 $2 $3
