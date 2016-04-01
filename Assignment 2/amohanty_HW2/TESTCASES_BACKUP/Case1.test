@@ -1,0 +1,18 @@
+@relation cleveland-14-heart-disease
+@attribute 'sex' { female, male}
+@attribute 'cp' { typ_angina, asympt, non_anginal, atyp_angina}
+@attribute 'class' { negative, positive}
+@data
+female,atyp_angina,negative
+female,asympt,negative
+male,non_anginal,positive
+female,non_anginal,negative
+male,asympt,negative
+female,non_anginal,positive
+male,non_anginal,negative
+male,typ_angina,negative
+female,asympt,negative
+female,asympt,negative
+female,non_anginal,positive
+female,non_anginal,negative
+female,atyp_angina,negative

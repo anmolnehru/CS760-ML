@@ -1,0 +1,32 @@
+echo 1
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case1.train TESTCASES_BACKUP/Case1.test n
+echo --------------------------
+echo 2 
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case2.train TESTCASES_BACKUP/Case2.test n
+echo --------------------------
+echo 3 
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case3.train TESTCASES_BACKUP/Case3.test n
+echo --------------------------
+echo 4 
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case4.train TESTCASES_BACKUP/Case4.test n
+echo --------------------------
+echo 5 
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case5.train TESTCASES_BACKUP/Case5.test n
+echo --------------------------
+echo 6 
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case6.train TESTCASES_BACKUP/Case6.test n
+echo --------------------------
+echo 7 
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case7.train TESTCASES_BACKUP/Case7.test n
+echo --------------------------
+echo 8 
+echo --------------------------
+./bayes TESTCASES_BACKUP/Case8.train TESTCASES_BACKUP/Case8.test n
+echo --------------------------

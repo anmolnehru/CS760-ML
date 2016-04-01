@@ -1,0 +1,1 @@
+/s/python-2.7.3/bin/python bayes_final.py $1 $2 $3

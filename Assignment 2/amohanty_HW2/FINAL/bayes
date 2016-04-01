@@ -1,0 +1,2 @@
+#call python and pass the 3 args
+/s/python-2.7.3/bin/python bayes1.py $1 $2 $3
