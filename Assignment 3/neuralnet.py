@@ -16,7 +16,6 @@ class NN:
         self.weights=[] #declaring list of weights
         for index in range(0,input_count) #for i=0>input_count
             self.weights.append(0.1)
-
         self.bias=0.1
 
 
@@ -58,7 +57,7 @@ class NN:
 		      expected_output=instance[-1] #last element gives the class label
 
 
-		 
+
 if pass __name__ == "__main__":
 
     #training file pulled from cmd
