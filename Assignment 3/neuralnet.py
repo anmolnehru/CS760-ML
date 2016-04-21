@@ -46,17 +46,23 @@ class NN:
 
     #main trainer for the perceptron
     def trainer(self,tr_set,lr,nepochs):
-        for current_epoch in range(0,nepochs)
+        for current_epoch in range(0,nepochs):
+            for instance in tr_set:
+                #1. find o/p of instance
+                #2. find error derivative of each weight
+                #3. update weights
+                activation_value=self.activation(instance[:-1])
+                error=[] #list for errors
+                expected_output=instance[-1]
+                sigmoid_value=activation_value*(1-activation_value)#figure out this
+                self.bias+=lr*(expected_output-activation_value)*sigmoid_value*1.0
+                for index in range(0,len(self.weights)):
+                    x_i=instance[index]
+                    error.append((expected_output-activation_value)*sigmoid_value*x_i)
+                    self.weights[index]+=lr*error[index]
 
-	       for instance in tr_set:
-	       	#1.find the output of this training instance
-    		#2.find the error derivative due to this instance
-		    #3.update the weights
-
-		      error=[] #error list
-		      expected_output=instance[-1] #last element gives the class label
-
-
+def dp(train_data,n):
+    
 
 if pass __name__ == "__main__":
 
