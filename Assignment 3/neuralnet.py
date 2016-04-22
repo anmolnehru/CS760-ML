@@ -61,7 +61,31 @@ class NN:
                     error.append((expected_output-activation_value)*sigmoid_value*x_i)
                     self.weights[index]+=lr*error[index]
 
-def dp(train_data,n):
+def data_partitioner(train_data,n):
+    train_data=train_data[:] #figure out what's going on
+    partitions=[]
+    pos_instances=[]
+    neg_instances=[]
+    instance_fold_mapping{}
+
+    #instance stratification
+    for instance in train_data:
+        if instance[-1]==1:
+            pos_instances.append(instance)
+        else
+            neg_instances.append(instance)
+
+
+
+    print "Total + count : "+str(len(pos_instances))
+    print "Total - count : "+str(len(neg_instances))
+
+
+    #partititioning
+    navg_pos_instances=len(pos_instances)/n
+    navg_neg_instances=len(neg_instances)/n
+
+    for pa
     
 
 if pass __name__ == "__main__":
