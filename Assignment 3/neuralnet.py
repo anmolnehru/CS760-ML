@@ -1,278 +1,292 @@
-#Author - Anmol Mohanty
-#Date :: 4/19
-
 import math
 import sys
-import decimal
 import random
 
-import numpy as np
+class NeuralNetwork:
 
-from scipy.io.arff import loadarff
+	def __init__(self,input_units_count):
+		self.weights = []
+		for index in range(0,input_units_count):
+			self.weights.append(0.1)
+		self.bias = 0.1
 
-class NN:
+	def sigmoid(self,x):
+		return 1.0/(1.0 + math.exp(-x))
 
-    def __init__(self,input_count):
-        self.weights=[] #declaring list of weights
-        for index in range(0,input_count): #for i=0>input_count
-            self.weights.append(0.1)
-        self.bias=0.1
+	def dot(self,x,y):
+		dot_product = 0.0
+		for index in range(0,len(x)):
+			dot_product += float(x[index] * y[index])
+		return dot_product
 
+	def activation(self,x):
+		return self.sigmoid(self.dot(x,self.weights)+self.bias)
 
+	def thresholder(self,activation_value):
+		if activation_value > 0.5:
+			return 1.0
+		else:
+			return 0.0
 
+	def predictor(self,test_instance):
+		return self.thresholder(self.activation(test_instance))
 
+	def trainer(self,training_set, learning_rate, epoch_count):
 
-    #sigmoid function
-    def sigmoid(self,x):
-	   return 1/(1+np.exp(x))
+		for current_epoch in range(0,epoch_count):
+			for training_instance in training_set:
+				# 1. Find O/P of this training_instance
+				# 2. Find the error derivative for each weight
+				# 3. Update the weights
+				activation_value = self.activation(training_instance[:-1])
+				error_derivates = []
+				expected_output = training_instance[-1]
+				sigmoid_derivative_value = activation_value * (1 - activation_value)
+				self.bias += learning_rate * (expected_output - activation_value) * sigmoid_derivative_value * 1.0
+				for index in range(0,len(self.weights)):
+					x_i = training_instance[index]
+					error_derivates.append((expected_output - activation_value) * sigmoid_derivative_value * x_i)
+					self.weights[index] += learning_rate*error_derivates[index]
+				'''
+				for index in range(0,len(self.weights)):
+					self.weights[index] += learning_rate*error_derivates[index]
+				'''
 
-    def dot(self,x,y):
-        dot_product = 0.0
-        for index in range(0,len(x)):
-            dot_product+=float(x[index]*y[index]) #dot product sum of float casted
-        return dot_product
+def read_file(filename,train_flag = False):
+	fp = open(filename,"r")
+	lines = fp.read().split("\n")
+	lines = lines[1:] #removing the relation
+	lines = [line for line in lines if line!='']
+	data = []
+	if(train_flag):
+		ordered_features = []
+		features_values = {}
+		for line in lines:
+			if line.startswith("@attribute"):
+				line_parts =line.split(' ')
+				ordered_features.append(eval(line_parts[1]))
+				if len(line_parts) <4:
+					features_values[eval(line_parts[1])] = line_parts[-1]
+				else:
+					features_values[eval(line_parts[1])] = []
+					for index in range(3,len(line_parts)):
+						features_values[eval(line_parts[1])].append(line_parts[index][:-1])
+			elif not line.startswith("@"):
+				data.append(line.split(','))
+		ordered_features.remove('Class')
+		return_data = (ordered_features,features_values,data)
+	else:
+		for line in lines:
+			if not line.startswith("@"):
+				data.append(line.split(','))
+		return_data = data
 
-    def activation(self,x):
-        return self.sigmoid(self.dot(x,self.weights)+self.bias) #sigma(weights*input+bias)
-
-    def predictor(self,instance):
-        return self.threshold(self.activation(instance))
-
-    def threshold(self,x):
-	   if x > 0.5:
-		  return 1 #class 2
-	   else:
-		  return 0 #class 1
-
-    #main trainer for the perceptron
-    def trainer(self,tr_set,lr,nepochs):
-        for current_epoch in range(0,nepochs):
-            for instance in tr_set:
-                #1. find o/p of instance
-                #2. find error derivative of each weight
-                #3. update weights
-                activation_value=self.activation(instance[:-1])
-                error=[] #list for errors
-                expected_output=instance[-1]
-                sigmoid_value=activation_value*(1-activation_value)#figure out this
-                self.bias+=lr*(expected_output-activation_value)*sigmoid_value*1.0
-                for index in range(0,len(self.weights)):
-                    x_i=instance[index]
-                    error.append((expected_output-activation_value)*sigmoid_value*x_i)
-                    self.weights[index]+=lr*error[index]
-
-def data_partitioner(train_data,n):
-    train_data=train_data[:] #figure out what's going on
-    partitions=[]
-    pos_instances=[]
-    neg_instances=[]
-    instance_fold_mapping={}
-
-    #instance stratification
-    for instance in train_data:
-        if instance[-1]==1:
-            pos_instances.append(instance)
-        else:
-            neg_instances.append(instance)
-
-
-
-    #print "Total + count : "+str(len(pos_instances))
-    #print "Total - count : "+str(len(neg_instances))
-
-
-    #partititioning
-    navg_pos_instances=len(pos_instances)/n
-    navg_neg_instances=len(neg_instances)/n
-
-    for partitition_count in range(0,n):
-        #1.get number of + instances
-        #2. remove them from the + training instances
-        #3, insert in correct position
-        rand_p_instances=random.sample(pos_instances, navg_pos_instances)
-        for instance in rand_p_instances:
-            instance_fold_mapping[str(instance)]=partitition_count+1
-            pos_instances.remove(instance)
-        partitions.append(rand_p_instances)
+	return return_data
 
 
-    partitition_count=0
+def straified_data_partitioner(training_data,n):
+	training_data = training_data[:]
+	partitions = []
+	positive_training_instances = []
+	negative_training_instances = []
+	instance_fold_mapping = {}
 
-    while len(pos_instances)!=0:
-        #Keep adding to remaining partitions until you end up with empty list
-        partitions[partitition_count].append(pos_instances[0])
-        instance_fold_mapping[str(pos_instances[0])]=partitition_count+1
-        pos_instances=pos_instances[1:]
-        partitition_count=(partitition_count+1)%n
+	#Stratifying the instances
+	for training_instance in training_data:
+		if training_instance[-1] == 1:
+			positive_training_instances.append(training_instance)
+		else:
+			negative_training_instances.append(training_instance)
 
+	#print "Total +ve count : "+str(len(positive_training_instances))
+	#print "Total -ve count : "+str(len(negative_training_instances))
+	#Do the partitioning
+	postive_training_instances_avg_count = len(positive_training_instances)/n
+	negative_training_instances_avg_count = len(negative_training_instances)/n
 
-    for partitition_count in range(0,n):
-        #1.get number of - instances
-        #2. remove them from the - training instances
-        #3, insert in correct position
-        rand_n_instances=random.sample(pos_instances, navg_pos_instances)
-        for instance in rand_n_instances:
-            instance_fold_mapping[str(instance)]=partitition_count+1
-            neg_instances.remove(instance)
-            partitions.append(rand_p_instances)
+	for partition_count in range(0,n):
+		# 1. Get the average number of +ve instances
+		# 2. Remove them from the positive_training_instances
+		# 3. Insert in the current partition:
+		random_positive_instances = random.sample(positive_training_instances,postive_training_instances_avg_count)
+		for instance in random_positive_instances:
+			instance_fold_mapping[str(instance)] = partition_count + 1
+			positive_training_instances.remove(instance)
+		partitions.append(random_positive_instances)
 
+	partition_count = 0
 
-    partitition_count=0
+	while len(positive_training_instances) != 0:
+		# 1. Add one by one to the remaining paritions until the list goes empty
+		partitions[partition_count].append(positive_training_instances[0])
+		instance_fold_mapping[str(positive_training_instances[0])] = partition_count + 1
+		positive_training_instances = positive_training_instances[1:]
+		partition_count = (partition_count+1)% n
 
-    while len(neg_instances)!=0:
-        #Keep adding to remaining partitions until you end up with empty list
-        partitions[partitition_count].append(neg_instances[0])
-        instance_fold_mapping[str(pos_instances[0])]=partitition_count+1
-        neg_instances=pos_instances[1:]
-        partitition_count=(partitition_count+1)%n
+	for partition_count in range(0,n):
+		# 1. Get the average number of -ve instances
+		# 2. Remove them from the negative_training_instances
+		# 3. Insert in the current partition:
+		random_positive_instances = random.sample(negative_training_instances,negative_training_instances_avg_count)
+		for instance in random_positive_instances:
+			instance_fold_mapping[str(instance)] = partition_count + 1
+			negative_training_instances.remove(instance)
+			partitions[partition_count].append(instance)
 
+	partition_count = 0
 
-    return partitions, instance_fold_mapping
+	while len(negative_training_instances) != 0:
+		# 1. Add one by one to the remaining paritions until the list goes empty
+		partitions[partition_count].append(negative_training_instances[0])
+		instance_fold_mapping[str(negative_training_instances[0])] = partition_count + 1
+		negative_training_instances = negative_training_instances[1:]
+		partition_count = (partition_count+1) % n
 
+	return partitions, instance_fold_mapping
 
-def strat_cross_vald(partitions_list,l,e):
+def stratified_cross_validator(partitions_list,l,e):
+	avg_train_accuracy = 0.0
+	avg_test_accuracy = 0.0
+	instance_output_mapping = {} # key : an instance , value : [predicted O/P, expected O/P, confidence]
+	n = len(partitions_list)
 
-    #some definitions
-    av_train_accuracy=0.0
-    av_test_accuracy=0.0
-    instance_output_mapping={} #dict :: key : an instance, value:[predicted o/p,expected o/p,confidence]
-    n=len(partitions_list)
+	for iteration_count in range(0,n):
+		training_partitions = []
+		for i in range(iteration_count,iteration_count+n-1):
+			if((i+1) > n):
+				partition_number = (i+1)%n
+			else:
+				partition_number = (i+1)
+			training_partitions.append(partition_number-1)
+		valid_partition_numbers = list(range(0,n))
+		for number in training_partitions:
+			if number in training_partitions:
+				valid_partition_numbers.remove(number)
 
-    for iteration_count in range(0,n):
-        training_partitions=[]
-        for i in range(iteration_count,iteration_count+n-1):
-            if((i+1)>n):
-                partitition_number=(i+1)%n
-            else:
-                partitition_number=(i+1)
+		test_partition_number = valid_partition_numbers[0]
+		training_data = []
+		for partition_number in training_partitions:
+			for instance in partitions_list[partition_number]:
+				training_data.append(instance)
 
-        training_partitions.append(partitition_number-1)
+		testing_data = partitions_list[test_partition_number]
+		if (n==1):
+			training_data = testing_data
 
-        valid_partition_numbers=list(range(0,n))
-        for number in training_partitions:
-            if number in training_partitions:
-                valid_partition_numbers.remove(number)
+		neural_network = NeuralNetwork(len(ordered_features))
+		random.shuffle(training_data)
+		neural_network.trainer(training_data,l,e)
 
+		test_accuracy = 0.0
 
-        test_partition_number=valid_partition_numbers[0]
-        training_data=[]
-        for partitition_number in training_partitions:
-            for instance in partitions_list[partitition_number]:
-                training_data.append(instance)
+		for instance in testing_data:
+			expected_output = features_values['Class'][int(instance[-1])]
+			predicted_output = features_values['Class'][int(neural_network.predictor(instance[:-1]))]
+			confidence_value = neural_network.activation(instance[:-1])
+			instance_output_mapping[str(instance)] = [predicted_output,expected_output,confidence_value]
+			if (expected_output == predicted_output):
+				test_accuracy += 1
 
+		test_accuracy = float(test_accuracy)*100/len(testing_data)
 
-        testing_data=partitions_list[test_partition_number]
-        if(n==1):
-            training_data=testing_data
+		train_accuracy = 0.0
 
-        neural_network=NN(len(ordered_features))
-        random.shuffle(training_data)
-        neural_network.trainer(training_data,l,e)
+		for instance in training_data:
+			expected_output = features_values['Class'][int(instance[-1])]
+			predicted_output = features_values['Class'][int(neural_network.predictor(instance[:-1]))]
+			confidence_value = neural_network.activation(instance[:-1])
+			instance_output_mapping[str(instance)] = [predicted_output,expected_output,confidence_value]
+			if (expected_output == predicted_output):
+				train_accuracy += 1
 
-        test_accuracy=0.0
+		train_accuracy = float(train_accuracy)*100/len(training_data)
+		avg_test_accuracy += test_accuracy
+		avg_train_accuracy += train_accuracy
 
-        for instance in testing_data:
-            expected_output=features_values['Class'][int(instance[-1])]
-            predicted_output=features_values['Class'][int(neural_network.predictor(instance[:-1]))]
-            confidence_value=neural_network.activation(instance[:-1])
-            instance_output_mapping[str(instance)]=[predicted_output,expected_output,confidence_value]
-            if(expected_output==predicted_output):
-                test_accuracy+=1
-
-
-        test_accuracy=float(test_accuracy)*100/len(testing_data)
-
-        train_accuracy=0.0
-
-        for instance in training_data:
-            expected_output = features_values['Class'][int(instance[-1])]
-            predicted_output = features_values['Class'][int(neural_network.predictor(instance[:-1]))]
-            confidence_value = neural_network.activation(instance[:-1])
-            instance_output_mapping[str(instance)] = [predicted_output,expected_output,confidence_value]
-            if (expected_output == predicted_output):
-                train_accuracy += 1
-
-        train_accuracy = float(train_accuracy)*100/len(training_data)
-        avg_test_accuracy += test_accuracy
-        avg_train_accuracy += train_accuracy
-
-    avg_train_accuracy = avg_train_accuracy/(1.0*n)
-    avg_test_accuracy = avg_test_accuracy/(1.0*n)
-
-    return instance_output_mapping
-
+	avg_train_accuracy = avg_train_accuracy/(1.0*n)
+	avg_test_accuracy = avg_test_accuracy/(1.0*n)
+        #print "avg_test_accuracy="+str(avg_test_accuracy)
+	return instance_output_mapping
 
 def roc_plotter(instance_confidence_list):
+	#print instance_confidence_list
         instance_confidence_list = instance_confidence_list[:]
-        instance_confidence_list.sort(key = lambda x : -x[0]) # [(c1,y1),......]
-        instances_list = []
-        confidence_list = []
-        for tuple_instance in instance_confidence_list:
-                confidence_list.append(tuple_instance[0])
-                instances_list.append(tuple_instance[1])
+	instance_confidence_list.sort(key = lambda x : -x[0]) # [(c1,y1),......]
+	instances_list = []
+	confidence_list = []
+	for tuple_instance in instance_confidence_list:
+		confidence_list.append(tuple_instance[0])
+		instances_list.append(tuple_instance[1])
 
-        num_neg = instances_list.count(0.0)
-        num_pos = instances_list.count(1.0)
-        TP = 0
-        FP = 0
-        last_TP = 0
-        coordinate_points = [(0.0,0.0)]
-        #print instances_list[0]
-        if instances_list[0] == 1.0:
-                TP += 1
-        else:
-                FP += 1
-        for index in range(1,len(instances_list)):
-                if (confidence_list[index] != confidence_list[index-1]) and (instances_list[index] == 0.0) and (TP > last_TP):
-                        FPR = (FP*1.0)/num_neg
-                        TPR = (TP*1.0)/num_pos
-                        coordinate_points.append((FPR,TPR))
-                        last_TP = TP
-                if instances_list[index] == 1.0:
-                        TP += 1
-                else:
-                        FP += 1
-                #print (TP,FP)
-        FPR = (FP*1.0)/num_neg
-        TPR = (TP*1.0)/num_pos
-        coordinate_points.append((FPR,TPR))
-        for point in coordinate_points:
-                print str(point[0])
-        for point in coordinate_points:
-                print str(point[1])
+	num_neg = instances_list.count("Rock")
+        #print "num_neg"+str(num_neg)
+	num_pos = instances_list.count("Mine")
+        #print "num_pos"+str(num_pos)
+	TP = 0
+	FP = 0
+	last_TP = 0
+	coordinate_points = []
+	#print instances_list[0]
+	if instances_list[0] == "Mine":
+		TP += 1
+	else:
+		FP += 1
+	for index in range(1,len(instances_list)):
+		if (confidence_list[index] != confidence_list[index-1]) and (instances_list[index] == "Rock") and (TP > last_TP):
+			FPR = (FP*1.0)/num_neg
+			TPR = (TP*1.0)/num_pos
+			coordinate_points.append([FPR,TPR])
+                        #print FPR+" "+TPR
+			last_TP = TP
+		if instances_list[index] == "Mine":
+			TP += 1
+		else:
+			FP += 1
+		#print (TP,FP)
+	FPR = (FP*1.0)/(num_neg)
+	TPR = (TP*1.0)/(num_pos)
+	coordinate_points.append([FPR,TPR])
 
+        #print coordinate_points
 
-
-
-if __name__ == "__main__":
-
-    #training file pulled from cmd
-    tf = sys.argv[1]
-    nfolds=sys.argv[2]
-    lr=sys.argv[3]
-    #nepochs=sys.argv[4]
+        #for point in coordinate_points:
+	#	print str(point[0])
+	#for point in coordinate_points:
+	#	print str(point[1])
 
 
-    #file I/O
-    #open the file in read mode
-    tfp=open(tf,"r")
-    train_data, train_meta = loadarff(tfp)
-
-    attributes = []
-    table = [list(i) for i in train_data]
-    att_names = train_meta.names()
-    for i in att_names:
-        attributes.append(list(train_meta.__getitem__(i)[1]))
+def threshold(activation_value):
+	if activation_value > 0.5:
+		return 1.0
+	else:
+		return 0.0
 
 
-    ordered_features=att_names
-    features_values=attributes
-    features_values=dict(zip(ordered_features,features_values))
-    training_data=table
-    #opclass=train_data[163][-1]
-    #print len(train_data)
-    #print sigmo(train_data[1][1])
+if __name__ == "__main__" :
 
-    #print opclass
+	from datetime import datetime
+	startTime = datetime.now()
 
+	training_filename = str(sys.argv[1])
+	n = int(sys.argv[2])
+	l = float(sys.argv[3])
+	e = int(sys.argv[4])
+	ordered_features,features_values,training_data = read_file(training_filename,True)
+	positive_class = features_values['Class'][1]
+	negative_class = features_values['Class'][0]
 
+	for training_instance in training_data:
+		training_instance[-1] = features_values['Class'].index(training_instance[-1])
+		for index in range(0,len(training_instance)):
+			training_instance[index] = float(training_instance[index])
+
+	partitions, instance_fold_mapping = straified_data_partitioner(training_data,n)
+	instance_output_mapping = stratified_cross_validator(partitions,l,e)
+
+#mohanty
+        instance_confidence_list=[]
+	for index in range(0,len(training_data)):
+		print str(instance_fold_mapping[str(training_data[index])])+"\t"+str(instance_output_mapping[str(training_data[index])][0])+"\t"+str(instance_output_mapping[str(training_data[index])][1])+"\t"+str(instance_output_mapping[str(training_data[index])][2])
+                instance_confidence_list.append([instance_output_mapping[str(training_data[index])][2],str(instance_output_mapping[str(training_data[index])][1])])
+
+        roc_plotter(instance_confidence_list)
