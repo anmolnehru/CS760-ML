@@ -1,8 +1,14 @@
-import math
-import sys
-import random
+#Author :: Anmol Mohanty
+#Date :: 4/14/2016
+#Language :: Python
+#Assignment :: http://pages.cs.wisc.edu/~dpage/cs760/Assignment5.html
+#Source data :: http://pages.cs.wisc.edu/~dpage/cs760/sonar.arff
 
-class NeuralNetwork:
+import math #for exponential functions
+import sys #to get the arguments
+import random #for random sampling
+
+class NN: #class NN
 
 	def __init__(self,input_units_count):
 		self.weights = []
@@ -35,9 +41,6 @@ class NeuralNetwork:
 
 		for current_epoch in range(0,epoch_count):
 			for training_instance in training_set:
-				# 1. Find O/P of this training_instance
-				# 2. Find the error derivative for each weight
-				# 3. Update the weights
 				activation_value = self.activation(training_instance[:-1])
 				error_derivates = []
 				expected_output = training_instance[-1]
@@ -51,7 +54,7 @@ class NeuralNetwork:
 				for index in range(0,len(self.weights)):
 					self.weights[index] += learning_rate*error_derivates[index]
 				'''
-
+#file parser
 def read_file(filename,train_flag = False):
 	fp = open(filename,"r")
 	lines = fp.read().split("\n")
@@ -83,8 +86,8 @@ def read_file(filename,train_flag = False):
 
 	return return_data
 
-
-def straified_data_partitioner(training_data,n):
+#strat data partitioner
+def SDP(training_data,n):
 	training_data = training_data[:]
 	partitions = []
 	positive_training_instances = []
@@ -144,7 +147,8 @@ def straified_data_partitioner(training_data,n):
 
 	return partitions, instance_fold_mapping
 
-def stratified_cross_validator(partitions_list,l,e):
+#strat cross validator
+def SCC(partitions_list,l,e):
 	avg_train_accuracy = 0.0
 	avg_test_accuracy = 0.0
 	instance_output_mapping = {} # key : an instance , value : [predicted O/P, expected O/P, confidence]
@@ -173,7 +177,7 @@ def stratified_cross_validator(partitions_list,l,e):
 		if (n==1):
 			training_data = testing_data
 
-		neural_network = NeuralNetwork(len(ordered_features))
+		neural_network = NN(len(ordered_features))
 		random.shuffle(training_data)
 		neural_network.trainer(training_data,l,e)
 
@@ -208,6 +212,7 @@ def stratified_cross_validator(partitions_list,l,e):
         #print "avg_test_accuracy="+str(avg_test_accuracy)
 	return instance_output_mapping
 
+#roc plotter
 def roc_plotter(instance_confidence_list):
 	#print instance_confidence_list
         instance_confidence_list = instance_confidence_list[:]
@@ -262,31 +267,30 @@ def threshold(activation_value):
 		return 0.0
 
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
 
-	from datetime import datetime
-	startTime = datetime.now()
+	tf = str(sys.argv[1])
+	n = int(sys.argv[2]) #number of folds
+	l = float(sys.argv[3]) #learning rate
+	e = int(sys.argv[4]) #no. of epochs
 
-	training_filename = str(sys.argv[1])
-	n = int(sys.argv[2])
-	l = float(sys.argv[3])
-	e = int(sys.argv[4])
-	ordered_features,features_values,training_data = read_file(training_filename,True)
-	positive_class = features_values['Class'][1]
-	negative_class = features_values['Class'][0]
+
+	ordered_features,features_values,training_data = read_file(tf,True) #reading in input file old fashioned way
+
+        positive_class = features_values['Class'][1] #Mine
+	negative_class = features_values['Class'][0] #Rock
 
 	for training_instance in training_data:
 		training_instance[-1] = features_values['Class'].index(training_instance[-1])
 		for index in range(0,len(training_instance)):
 			training_instance[index] = float(training_instance[index])
 
-	partitions, instance_fold_mapping = straified_data_partitioner(training_data,n)
-	instance_output_mapping = stratified_cross_validator(partitions,l,e)
+	partitions, instance_fold_mapping = SDP(training_data,n)
+	instance_output_mapping = SCC(partitions,l,e)
 
-#mohanty
-        instance_confidence_list=[]
+        #instance_confidence_list=[] #for plotting roc
 	for index in range(0,len(training_data)):
 		print str(instance_fold_mapping[str(training_data[index])])+"\t"+str(instance_output_mapping[str(training_data[index])][0])+"\t"+str(instance_output_mapping[str(training_data[index])][1])+"\t"+str(instance_output_mapping[str(training_data[index])][2])
-                instance_confidence_list.append([instance_output_mapping[str(training_data[index])][2],str(instance_output_mapping[str(training_data[index])][1])])
+                #instance_confidence_list.append([instance_output_mapping[str(training_data[index])][2],str(instance_output_mapping[str(training_data[index])][1])])
 
-        roc_plotter(instance_confidence_list)
+        #roc_plotter(instance_confidence_list)
